@@ -32,7 +32,7 @@
 #if !MESHTASTIC_EXCLUDE_CANNEDMESSAGES
 #include "modules/CannedMessageModule.h"
 #endif
-#if HAS_SCREEN && !MESHTASTIC_EXCLUDE_BATTERY_CALIBRATION
+#if !MESHTASTIC_EXCLUDE_BATTERY_CALIBRATION
 #include "modules/BatteryCalibrationModule.h"
 #endif
 #if !MESHTASTIC_EXCLUDE_DETECTIONSENSOR
