@@ -41,7 +41,15 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     // === Header ===
     graphics::drawCommonHeader(display, x, y, titleStr);
 
-    const int w = display->getWidth();
-    const int h = display->getHeight();}
+    if (powerStatus->getHasBattery()) {
+        char voltageStr[24];
+        const int batV = powerStatus->getBatteryVoltageMv() / 1000;
+        const int batCv = (powerStatus->getBatteryVoltageMv() % 1000) / 10;
+        snprintf(voltageStr, sizeof(voltageStr), "Voltage: %01d.%02dV", batV, batCv);
+        display->drawString(x, graphics::getTextPositions(display)[line++], voltageStr);
+    } else {
+        display->drawString(x, graphics::getTextPositions(display)[line++], "Voltage: USB");
+    }
+}
 
 #endif
