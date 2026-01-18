@@ -21,6 +21,7 @@
 #include "modules/AdminModule.h"
 #include "modules/CannedMessageModule.h"
 #include "modules/ExternalNotificationModule.h"
+#include "modules/BatteryCalibrationModule.h"
 #include "modules/KeyVerificationModule.h"
 #include "modules/TraceRouteModule.h"
 #include <algorithm>
@@ -2205,9 +2206,9 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Start", "Abort", "Apply" };
+    static const char *optionsArray[] = { "Back", "Start", "Reset", "Apply" };
     
-    enum optionsNumbers { Back = 0, Start = 1, Abort = 2, Apply = 3 };
+    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     bannerOptions.optionsArrayPtr = optionsArray;
@@ -2215,7 +2216,10 @@ void menuHandler::batteryCalibrationMenu()
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
             screen->runNow();
-        } else if (selected == Abort) {
+        } else if (selected == Reset) {
+            if (batteryCalibrationModule) {
+                batteryCalibrationModule->resetGraphSamples();
+            }
             screen->runNow();
         } else if (selected == Apply) {
             screen->runNow();
