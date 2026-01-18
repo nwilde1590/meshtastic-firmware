@@ -2334,13 +2334,13 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Start", "Reset", "Apply", "Display Scale" };
+    static const char *optionsArray[] = { "Back", "Start", "Reset", "Apply" };
     
-    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3, DisplayScale = 4 };
+    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     bannerOptions.optionsArrayPtr = optionsArray;
-    bannerOptions.optionsCount = 5;
+    bannerOptions.optionsCount = 4;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
             if (batteryCalibrationSampler) {
@@ -2354,56 +2354,10 @@ void menuHandler::batteryCalibrationMenu()
             screen->runNow();
         } else if (selected == Apply) {
             screen->runNow();
-        } else if (selected == DisplayScale) {
-            menuHandler::menuQueue = menuHandler::battery_calibration_display_scale_menu;
-            screen->runNow();
         }
     };
     screen->showOverlayBanner(bannerOptions);
     
-}
-
-void menuHandler::batteryCalibrationDisplayScaleMenu()
-{
-    static const char *optionsArray[] = { "Back", "15 min", "30 min", "1 hr", "2 hr", "4 hr", "8 hr" };
-    static const uint32_t displayWindowMs[] = { 0,
-                                                15 * 60 * 1000,
-                                                30 * 60 * 1000,
-                                                60 * 60 * 1000,
-                                                120 * 60 * 1000,
-                                                240 * 60 * 1000,
-                                                480 * 60 * 1000 };
-    static const uint8_t optionsCount = sizeof(optionsArray) / sizeof(optionsArray[0]);
-    uint32_t currentWindowMs = BatteryCalibrationSampler::kDefaultDisplayWindowMs;
-#ifdef meshtastic_DeviceUIConfig_battery_calibration_display_window_ms_tag
-    if (uiconfig.battery_calibration_display_window_ms > 0) {
-        currentWindowMs = uiconfig.battery_calibration_display_window_ms;
-    }
-#endif
-    BannerOverlayOptions bannerOptions;
-    bannerOptions.message = "Display Scale";
-    bannerOptions.optionsArrayPtr = optionsArray;
-    bannerOptions.optionsCount = optionsCount;
-    bannerOptions.InitialSelected = 0;
-    for (uint8_t i = 1; i < optionsCount; ++i) {
-        if (displayWindowMs[i] == currentWindowMs) {
-            bannerOptions.InitialSelected = i;
-            break;
-        }
-    }
-    bannerOptions.bannerCallback = [](int selected) -> void {
-        if (selected > 0 && batteryCalibrationSampler) {
-            batteryCalibrationSampler->setDisplayWindowMs(displayWindowMs[selected]);
-            batteryCalibrationSampler->resetSamples();
-#ifdef meshtastic_DeviceUIConfig_battery_calibration_display_window_ms_tag
-            uiconfig.battery_calibration_display_window_ms = displayWindowMs[selected];
-            saveUIConfig();
-#endif
-        }
-        menuHandler::menuQueue = menuHandler::battery_calibration_menu;
-        screen->runNow();
-    };
-    screen->showOverlayBanner(bannerOptions);
 }
 
 void menuHandler::keyVerificationInitMenu()
@@ -2735,9 +2689,9 @@ void menuHandler::handleMenuSwitch(OLEDDisplay *display)
     case battery_calibration_menu:
         batteryCalibrationMenu();
         break;
-    case battery_calibration_display_scale_menu:
-        batteryCalibrationDisplayScaleMenu();
-        break;
+    // case battery_calibration_display_scale_menu:
+    //     batteryCalibrationDisplayScaleMenu();
+    //     break;
     case FrameToggles:
         FrameToggles_menu();
         break;

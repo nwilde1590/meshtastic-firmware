@@ -4,7 +4,6 @@
 *DeviceUIConfig.calibration_data max_size:16
 *DeviceUIConfig.compass_mode int_size:8
 *DeviceUIConfig.gps_format int_size:8
-*DeviceUIConfig.battery_calibration_display_window_ms int_size:32
 *NodeFilter.node_name max_size:16
 *NodeFilter.hops_away int_size:8
 *NodeFilter.channel int_size:8

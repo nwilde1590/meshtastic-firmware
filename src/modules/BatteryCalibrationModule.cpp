@@ -123,12 +123,23 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     const int16_t percentX = static_cast<int16_t>(x + SCREEN_WIDTH - display->getStringWidth(percentStr));
     display->drawString(percentX, lineY, percentStr);
 
-    uint32_t displayWindowMs = BatteryCalibrationSampler::kDefaultDisplayWindowMs;
+    uint32_t displayWindowMs = 0;
+    const BatteryCalibrationSampler::BatterySample *samples = nullptr;
+    uint16_t sampleCount = 0;
+    uint16_t sampleStart = 0;
     if (batteryCalibrationSampler) {
-        displayWindowMs = batteryCalibrationSampler->getDisplayWindowMs();
+        batteryCalibrationSampler->getSamples(samples, sampleCount, sampleStart);
+    }
+    if (samples && sampleCount >= 2) {
+        const uint16_t firstIndex = sampleStart;
+        const uint16_t lastIndex =
+            static_cast<uint16_t>((sampleStart + sampleCount - 1) % BatteryCalibrationSampler::kMaxSamples);
+        const uint32_t firstTimestamp = samples[firstIndex].timestampMs;
+        const uint32_t lastTimestamp = samples[lastIndex].timestampMs;
+        displayWindowMs = (lastTimestamp >= firstTimestamp) ? (lastTimestamp - firstTimestamp) : 0;
     }
     const uint32_t hourMs = 60 * 60 * 1000U;
-    if (displayWindowMs % hourMs == 0) {
+    if (displayWindowMs >= hourMs && displayWindowMs % hourMs == 0) {
         snprintf(durationStr, sizeof(durationStr), "%luh", static_cast<unsigned long>(displayWindowMs / hourMs));
     } else {
         snprintf(durationStr, sizeof(durationStr), "%lum", static_cast<unsigned long>(displayWindowMs / 60000U));
@@ -163,13 +174,6 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
             display->drawString(textX, textY, placeholder);
         }
         return;
-    }
-
-    const BatteryCalibrationSampler::BatterySample *samples = nullptr;
-    uint16_t sampleCount = 0;
-    uint16_t sampleStart = 0;
-    if (batteryCalibrationSampler) {
-        batteryCalibrationSampler->getSamples(samples, sampleCount, sampleStart);
     }
 
     drawBatteryGraph(display, graphX, graphY, graphW, graphH, samples, sampleCount, sampleStart);
