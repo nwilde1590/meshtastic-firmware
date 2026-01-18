@@ -2207,13 +2207,13 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Start", "Reset", "Apply" };
+    static const char *optionsArray[] = { "Back", "Start", "Reset", "Apply", "Display Scale" };
     
-    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
+    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3, DisplayScale = 4 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     bannerOptions.optionsArrayPtr = optionsArray;
-    bannerOptions.optionsCount = 4;
+    bannerOptions.optionsCount = 5;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
             if (batteryCalibrationSampler) {
@@ -2232,12 +2232,40 @@ void menuHandler::batteryCalibrationMenu()
                 batteryCalibrationSampler->stopSampling();
             }
             screen->runNow();
+        } else if (selected == DisplayScale) {
+            menuHandler::menuQueue = menuHandler::battery_calibration_display_scale_menu;
+            screen->runNow();
         }
     };
     screen->showOverlayBanner(bannerOptions);
     
 }
 
+void menuHandler::batteryCalibrationDisplayScaleMenu()
+{
+    static const char *optionsArray[] = { "Back", "15 min", "30 min", "1 hr", "2 hr", "4 hr", "8 hr" };
+    static const uint32_t displayWindowMs[] = { 0,
+                                                15 * 60 * 1000,
+                                                30 * 60 * 1000,
+                                                60 * 60 * 1000,
+                                                120 * 60 * 1000,
+                                                240 * 60 * 1000,
+                                                480 * 60 * 1000 };
+    static const uint8_t optionsCount = sizeof(optionsArray) / sizeof(optionsArray[0]);
+    BannerOverlayOptions bannerOptions;
+    bannerOptions.message = "Display Scale";
+    bannerOptions.optionsArrayPtr = optionsArray;
+    bannerOptions.optionsCount = optionsCount;
+    bannerOptions.bannerCallback = [](int selected) -> void {
+        if (selected > 0 && batteryCalibrationSampler) {
+            batteryCalibrationSampler->setDisplayWindowMs(displayWindowMs[selected]);
+            batteryCalibrationSampler->resetSamples();
+        }
+        menuHandler::menuQueue = menuHandler::battery_calibration_menu;
+        screen->runNow();
+    };
+    screen->showOverlayBanner(bannerOptions);
+}
 
 void menuHandler::keyVerificationInitMenu()
 {
@@ -2556,6 +2584,9 @@ void menuHandler::handleMenuSwitch(OLEDDisplay *display)
         break;
     case battery_calibration_menu:
         batteryCalibrationMenu();
+        break;
+    case battery_calibration_display_scale_menu:
+        batteryCalibrationDisplayScaleMenu();
         break;
     case FrameToggles:
         FrameToggles_menu();

@@ -11,6 +11,7 @@ BatteryCalibrationSampler *batteryCalibrationSampler;
 BatteryCalibrationSampler::BatteryCalibrationSampler() : concurrency::OSThread("BatteryCalibrationSampler")
 {
     batteryCalibrationSampler = this;
+    setDisplayWindowMs(kDefaultDisplayWindowMs);
     disable();
 }
 
@@ -34,6 +35,12 @@ void BatteryCalibrationSampler::resetSamples()
     lastSampleMs = 0;
 }
 
+void BatteryCalibrationSampler::setDisplayWindowMs(uint32_t displayWindowMs)
+{
+    const uint32_t intervalMs = displayWindowMs / kMaxSamples;
+    sampleIntervalMs = (intervalMs > 0) ? intervalMs : 1;
+}
+
 void BatteryCalibrationSampler::getSamples(const BatterySample *&samplesOut, uint16_t &countOut, uint16_t &startOut) const
 {
     samplesOut = samples;
@@ -43,7 +50,7 @@ void BatteryCalibrationSampler::getSamples(const BatterySample *&samplesOut, uin
 
 void BatteryCalibrationSampler::appendSample(uint16_t voltageMv, uint32_t nowMs)
 {
-    if (lastSampleMs != 0 && (nowMs - lastSampleMs) < kSampleIntervalMs) {
+    if (lastSampleMs != 0 && (nowMs - lastSampleMs) < sampleIntervalMs) {
         return;
     }
 
@@ -71,11 +78,11 @@ int32_t BatteryCalibrationSampler::runOnce()
     const uint32_t nowMs = millis();
     if (!powerStatus || !powerStatus->getHasBattery()) {
         resetSamples();
-        return kSampleIntervalMs;
+        return sampleIntervalMs;
     }
 
     appendSample(static_cast<uint16_t>(powerStatus->getBatteryVoltageMv()), nowMs);
-    return kSampleIntervalMs;
+    return sampleIntervalMs;
 }
 
 #endif
