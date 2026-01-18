@@ -95,6 +95,11 @@ message DeviceUIConfig {
   GpsCoordinateFormat gps_format = 19;
 
   /*
+   * Battery calibration graph display window in milliseconds.
+   */
+  uint32 battery_calibration_display_window_ms = 20;
+
+  /*
    * How the GPS coordinates are displayed on the OLED screen.
    */
   enum GpsCoordinateFormat {
