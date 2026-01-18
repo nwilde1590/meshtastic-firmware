@@ -1,6 +1,7 @@
 #include "BatteryCalibrationModule.h"
 #include "graphics/SharedUIDisplay.h"
 #include "graphics/ScreenFonts.h"
+#include "power.h"
 
 BatteryCalibrationModule *batteryCalibrationModule;
 
@@ -27,5 +28,22 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     const char *titleStr = "Battery Calibration";
 
     graphics::drawCommonHeader(display, x, y, titleStr);
+
+    char voltageStr[12] = {0};
+    char percentStr[8] = {0};
+    if (powerStatus && powerStatus->getHasBattery()) {
+        const int batV = powerStatus->getBatteryVoltageMv() / 1000;
+        const int batCv = (powerStatus->getBatteryVoltageMv() % 1000) / 10;
+        snprintf(voltageStr, sizeof(voltageStr), "%01d.%02dV", batV, batCv);
+        snprintf(percentStr, sizeof(percentStr), "%3d%%", powerStatus->getBatteryChargePercent());
+    } else {
+        snprintf(voltageStr, sizeof(voltageStr), "USB");
+        snprintf(percentStr, sizeof(percentStr), "USB");
+    }
+
+    const int lineY = graphics::getTextPositions(display)[1];
+    display->drawString(x, lineY, voltageStr);
+    display->drawString(x + SCREEN_WIDTH - display->getStringWidth(percentStr), lineY, percentStr);
+
 }
 #endif
