@@ -2202,6 +2202,30 @@ void menuHandler::powerMenu()
     screen->showOverlayBanner(bannerOptions);
 }
 
+void menuHandler::batteryCalibrationMenu()
+{
+
+    static const char *optionsArray[] = { "Back", "Start", "Abort", "Apply" };
+    
+    enum optionsNumbers { Back = 0, Start = 1, Abort = 2, Apply = 3 };
+    BannerOverlayOptions bannerOptions;
+    bannerOptions.message = "Battery Calibration Action";
+    bannerOptions.optionsArrayPtr = optionsArray;
+    bannerOptions.optionsCount = 4;
+    bannerOptions.bannerCallback = [](int selected) -> void {
+        if (selected == Start) {
+            screen->runNow();
+        } else if (selected == Abort) {
+            screen->runNow();
+        } else if (selected == Apply) {
+            screen->runNow();
+        }
+    };
+    screen->showOverlayBanner(bannerOptions);
+    
+}
+
+
 void menuHandler::keyVerificationInitMenu()
 {
     screen->showNodePicker("Node to Verify", 30000,
@@ -2516,6 +2540,9 @@ void menuHandler::handleMenuSwitch(OLEDDisplay *display)
         break;
     case power_menu:
         powerMenu();
+        break;
+    case battery_calibration_menu:
+        batteryCalibrationMenu();
         break;
     case FrameToggles:
         FrameToggles_menu();

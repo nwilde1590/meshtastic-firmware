@@ -2,9 +2,12 @@
 #include "graphics/SharedUIDisplay.h"
 #include "graphics/ScreenFonts.h"
 
+BatteryCalibrationModule *batteryCalibrationModule;
+
 BatteryCalibrationModule::BatteryCalibrationModule()
     : SinglePortModule("battery-calibration", meshtastic_PortNum_PRIVATE_APP)
 {
+    batteryCalibrationModule = this;
 }
 
 ProcessMessage BatteryCalibrationModule::handleReceived(const meshtastic_MeshPacket &mp)

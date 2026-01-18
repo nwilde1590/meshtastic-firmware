@@ -14,4 +14,8 @@ class BatteryCalibrationModule : public SinglePortModule
 
   protected:
     ProcessMessage handleReceived(const meshtastic_MeshPacket &mp) override;
+
 };
+
+
+extern BatteryCalibrationModule *batteryCalibrationModule;
