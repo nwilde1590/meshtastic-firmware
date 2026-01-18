@@ -50,9 +50,6 @@ void BatteryCalibrationSampler::getSamples(const BatterySample *&samplesOut, uin
 
 void BatteryCalibrationSampler::appendSample(uint16_t voltageMv, uint32_t nowMs)
 {
-    if (lastSampleMs != 0 && (nowMs - lastSampleMs) < sampleIntervalMs) {
-        return;
-    }
 
     lastSampleMs = nowMs;
 
