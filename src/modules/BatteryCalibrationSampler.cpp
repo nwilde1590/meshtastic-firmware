@@ -12,7 +12,7 @@ BatteryCalibrationSampler::BatteryCalibrationSampler() : concurrency::OSThread("
 {
     batteryCalibrationSampler = this;
     setDisplayWindowMs(kDefaultDisplayWindowMs);
-    disable();
+    startSampling();
 }
 
 void BatteryCalibrationSampler::startSampling()

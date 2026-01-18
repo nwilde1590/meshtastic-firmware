@@ -2218,19 +2218,14 @@ void menuHandler::batteryCalibrationMenu()
         if (selected == Start) {
             if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
-                batteryCalibrationSampler->startSampling();
             }
             screen->runNow();
         } else if (selected == Reset) {
             if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
-                batteryCalibrationSampler->stopSampling();
             }
             screen->runNow();
         } else if (selected == Apply) {
-            if (batteryCalibrationSampler) {
-                batteryCalibrationSampler->stopSampling();
-            }
             screen->runNow();
         } else if (selected == DisplayScale) {
             menuHandler::menuQueue = menuHandler::battery_calibration_display_scale_menu;
