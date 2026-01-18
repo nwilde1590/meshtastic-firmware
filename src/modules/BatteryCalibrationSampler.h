@@ -24,6 +24,7 @@ class BatteryCalibrationSampler : private concurrency::OSThread
     bool isSampling() const { return active; }
     void resetSamples();
     void setDisplayWindowMs(uint32_t displayWindowMs);
+    uint32_t getDisplayWindowMs() const { return displayWindowMs; }
     void getSamples(const BatterySample *&samplesOut, uint16_t &countOut, uint16_t &startOut) const;
 
   protected:
@@ -35,6 +36,7 @@ class BatteryCalibrationSampler : private concurrency::OSThread
     uint16_t sampleStart = 0;
     uint32_t lastSampleMs = 0;
     uint32_t sampleIntervalMs = 1000;
+    uint32_t displayWindowMs = kDefaultDisplayWindowMs;
     bool active = false;
 
     void appendSample(uint16_t voltageMv, uint32_t nowMs);

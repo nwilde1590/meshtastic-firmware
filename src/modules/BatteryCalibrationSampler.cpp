@@ -4,6 +4,7 @@
 #if HAS_SCREEN
 
 #include <Arduino.h>
+#include "mesh/NodeDB.h"
 #include "power.h"
 
 BatteryCalibrationSampler *batteryCalibrationSampler;
@@ -11,7 +12,14 @@ BatteryCalibrationSampler *batteryCalibrationSampler;
 BatteryCalibrationSampler::BatteryCalibrationSampler() : concurrency::OSThread("BatteryCalibrationSampler")
 {
     batteryCalibrationSampler = this;
-    setDisplayWindowMs(kDefaultDisplayWindowMs);
+#ifdef meshtastic_DeviceUIConfig_battery_calibration_display_window_ms_tag
+    const uint32_t windowMs =
+        (uiconfig.battery_calibration_display_window_ms > 0) ? uiconfig.battery_calibration_display_window_ms
+                                                             : kDefaultDisplayWindowMs;
+#else
+    const uint32_t windowMs = kDefaultDisplayWindowMs;
+#endif
+    setDisplayWindowMs(windowMs);
     startSampling();
 }
 
@@ -37,6 +45,8 @@ void BatteryCalibrationSampler::resetSamples()
 
 void BatteryCalibrationSampler::setDisplayWindowMs(uint32_t displayWindowMs)
 {
+    displayWindowMs = (displayWindowMs > 0) ? displayWindowMs : kDefaultDisplayWindowMs;
+    this->displayWindowMs = displayWindowMs;
     const uint32_t intervalMs = displayWindowMs / kMaxSamples;
     sampleIntervalMs = (intervalMs > 0) ? intervalMs : 1;
 }
