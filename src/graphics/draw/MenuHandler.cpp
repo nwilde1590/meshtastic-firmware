@@ -22,6 +22,7 @@
 #include "modules/CannedMessageModule.h"
 #include "modules/ExternalNotificationModule.h"
 #include "modules/BatteryCalibrationModule.h"
+#include "modules/BatteryCalibrationSampler.h"
 #include "modules/KeyVerificationModule.h"
 #include "modules/TraceRouteModule.h"
 #include <algorithm>
@@ -2215,13 +2216,21 @@ void menuHandler::batteryCalibrationMenu()
     bannerOptions.optionsCount = 4;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
+            if (batteryCalibrationSampler) {
+                batteryCalibrationSampler->resetSamples();
+                batteryCalibrationSampler->startSampling();
+            }
             screen->runNow();
         } else if (selected == Reset) {
-            if (batteryCalibrationModule) {
-                batteryCalibrationModule->resetGraphSamples();
+            if (batteryCalibrationSampler) {
+                batteryCalibrationSampler->resetSamples();
+                batteryCalibrationSampler->stopSampling();
             }
             screen->runNow();
         } else if (selected == Apply) {
+            if (batteryCalibrationSampler) {
+                batteryCalibrationSampler->stopSampling();
+            }
             screen->runNow();
         }
     };

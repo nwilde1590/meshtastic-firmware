@@ -34,6 +34,7 @@
 #endif
 #if !MESHTASTIC_EXCLUDE_BATTERY_CALIBRATION
 #include "modules/BatteryCalibrationModule.h"
+#include "modules/BatteryCalibrationSampler.h"
 #endif
 #if !MESHTASTIC_EXCLUDE_DETECTIONSENSOR
 #include "modules/DetectionSensorModule.h"
@@ -248,7 +249,8 @@ void setupModules()
     new HostMetricsModule();
 #endif
 #if HAS_SCREEN && !MESHTASTIC_EXCLUDE_BATTERY_CALIBRATION
-        new BatteryCalibrationModule();
+    new BatteryCalibrationModule();
+    new BatteryCalibrationSampler();
 #endif
 #if HAS_TELEMETRY
     new DeviceTelemetryModule();

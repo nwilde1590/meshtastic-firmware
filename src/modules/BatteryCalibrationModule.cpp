@@ -18,39 +18,6 @@ ProcessMessage BatteryCalibrationModule::handleReceived(const meshtastic_MeshPac
 }
 
 #if HAS_SCREEN
-void BatteryCalibrationModule::resetSamples()
-{
-    sampleCount = 0;
-    sampleStart = 0;
-    lastSampleMs = 0;
-}
-
-void BatteryCalibrationModule::resetGraphSamples()
-{
-    resetSamples();
-}
-
-void BatteryCalibrationModule::appendSample(uint16_t voltageMv, uint32_t nowMs)
-{
-    if (lastSampleMs != 0 && (nowMs - lastSampleMs) < kSampleIntervalMs) {
-        return;
-    }
-
-    lastSampleMs = nowMs;
-
-    uint16_t index = 0;
-    if (sampleCount < kMaxSamples) {
-        index = static_cast<uint16_t>((sampleStart + sampleCount) % kMaxSamples);
-        sampleCount++;
-    } else {
-        index = sampleStart;
-        sampleStart = static_cast<uint16_t>((sampleStart + 1) % kMaxSamples);
-    }
-
-    samples[index].voltageMv = voltageMv;
-    samples[index].timestampMs = nowMs;
-}
-
 void BatteryCalibrationModule::computeGraphBounds(OLEDDisplay *display, int16_t x, int16_t y, int16_t &graphX, int16_t &graphY,
                                                   int16_t &graphW, int16_t &graphH)
 {
@@ -66,16 +33,18 @@ void BatteryCalibrationModule::computeGraphBounds(OLEDDisplay *display, int16_t 
     }
 }
 
-void BatteryCalibrationModule::drawBatteryGraph(OLEDDisplay *display, int16_t graphX, int16_t graphY, int16_t graphW, int16_t graphH)
+void BatteryCalibrationModule::drawBatteryGraph(OLEDDisplay *display, int16_t graphX, int16_t graphY, int16_t graphW, int16_t graphH,
+                                                const BatteryCalibrationSampler::BatterySample *samples, uint16_t sampleCount,
+                                                uint16_t sampleStart)
 {
-    if (sampleCount < 2 || graphW <= 1 || graphH <= 1) {
+    if (!samples || sampleCount < 2 || graphW <= 1 || graphH <= 1) {
         return;
     }
 
     uint16_t minMv = samples[sampleStart].voltageMv;
     uint16_t maxMv = samples[sampleStart].voltageMv;
     for (uint16_t i = 1; i < sampleCount; ++i) {
-        const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % kMaxSamples);
+        const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % BatteryCalibrationSampler::kMaxSamples);
         const uint16_t voltageMv = samples[sampleIndex].voltageMv;
         if (voltageMv < minMv) {
             minMv = voltageMv;
@@ -113,7 +82,7 @@ void BatteryCalibrationModule::drawBatteryGraph(OLEDDisplay *display, int16_t gr
     int16_t prevY = voltageToY(samples[prevIndex].voltageMv);
 
     for (uint16_t i = 1; i < sampleCount; ++i) {
-        const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % kMaxSamples);
+        const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % BatteryCalibrationSampler::kMaxSamples);
         const int16_t currX = static_cast<int16_t>(graphX + (static_cast<int32_t>(i) * xSpan) / maxIndex);
         const int16_t currY = voltageToY(samples[sampleIndex].voltageMv);
         display->drawLine(prevX, prevY, currX, currY);
@@ -159,7 +128,6 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     computeGraphBounds(display, x, y, graphX, graphY, graphW, graphH);
 
     if (!hasBattery) {
-        resetSamples();
         if (graphH > 0) {
             const char *placeholder = "No battery";
             const int16_t textX = static_cast<int16_t>(graphX + (graphW - display->getStringWidth(placeholder)) / 2);
@@ -169,7 +137,13 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
         return;
     }
 
-    appendSample(static_cast<uint16_t>(powerStatus->getBatteryVoltageMv()), millis());
-    drawBatteryGraph(display, graphX, graphY, graphW, graphH);
+    const BatteryCalibrationSampler::BatterySample *samples = nullptr;
+    uint16_t sampleCount = 0;
+    uint16_t sampleStart = 0;
+    if (batteryCalibrationSampler) {
+        batteryCalibrationSampler->getSamples(samples, sampleCount, sampleStart);
+    }
+
+    drawBatteryGraph(display, graphX, graphY, graphW, graphH, samples, sampleCount, sampleStart);
 }
 #endif
