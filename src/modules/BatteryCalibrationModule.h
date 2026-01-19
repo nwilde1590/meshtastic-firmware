@@ -2,11 +2,17 @@
 
 #include "SinglePortModule.h"
 #include "BatteryCalibrationSampler.h"
+#include "power.h"
 
 class BatteryCalibrationModule : public SinglePortModule
 {
   public:
     BatteryCalibrationModule();
+    void startCalibration();
+    void stopCalibration();
+    bool isCalibrationActive() const { return calibrationActive; }
+    bool persistCalibrationOcv();
+    void handleSampleUpdate();
 
 #if HAS_SCREEN
     bool wantUIFrame() override { return true; }
@@ -16,8 +22,12 @@ class BatteryCalibrationModule : public SinglePortModule
   protected:
     ProcessMessage handleReceived(const meshtastic_MeshPacket &mp) override;
 
-#if HAS_SCREEN
   private:
+    bool computeOcvFromSamples(uint16_t *ocvOut, size_t ocvCount);
+    bool calibrationActive = false;
+    bool calibrationOcvValid = false;
+    uint16_t calibrationOcv[NUM_OCV_POINTS]{};
+#if HAS_SCREEN
     void computeGraphBounds(OLEDDisplay *display, int16_t x, int16_t y, int16_t &graphX, int16_t &graphY, int16_t &graphW,
                             int16_t &graphH);
     void drawBatteryGraph(OLEDDisplay *display, int16_t graphX, int16_t graphY, int16_t graphW, int16_t graphH,

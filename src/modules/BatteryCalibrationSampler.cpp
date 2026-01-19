@@ -1,5 +1,6 @@
 #include "BatteryCalibrationSampler.h"
 #include "configuration.h"
+#include "modules/BatteryCalibrationModule.h"
 
 #if HAS_SCREEN
 
@@ -95,6 +96,9 @@ int32_t BatteryCalibrationSampler::runOnce()
     }
 
     appendSample(static_cast<uint16_t>(powerStatus->getBatteryVoltageMv()), nowMs);
+    if (batteryCalibrationModule) {
+        batteryCalibrationModule->handleSampleUpdate();
+    }
     return sampleIntervalMs;
 }
 

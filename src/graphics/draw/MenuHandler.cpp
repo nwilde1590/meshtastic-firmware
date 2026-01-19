@@ -2334,13 +2334,13 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Begin Calibration", "Reset", "Apply Calibration" };
+    static const char *optionsArray[] = { "Back", "Begin Calibration", "Reset OCV Array" };
     
     enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     bannerOptions.optionsArrayPtr = optionsArray;
-    bannerOptions.optionsCount = 4;
+    bannerOptions.optionsCount = 3;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
             menuHandler::menuQueue = menuHandler::battery_calibration_confirm_menu;
@@ -2350,9 +2350,7 @@ void menuHandler::batteryCalibrationMenu()
                 batteryCalibrationSampler->resetSamples();
             }
             screen->runNow();
-        } else if (selected == Apply) {
-            screen->runNow();
-        }
+        } 
     };
     screen->showOverlayBanner(bannerOptions);
     
@@ -2372,10 +2370,12 @@ void menuHandler::batteryCalibrationConfirmMenu()
     bannerOptions.optionsCount = 2;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
-            if (batteryCalibrationSampler) {
+            if (batteryCalibrationModule) {
+                batteryCalibrationModule->startCalibration();
+            } else if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
             }
-            screen->showSimpleBanner("Calibration starting\n(placeholder)", 3000);
+            screen->showSimpleBanner("Calibration started.\nUse device as normal.\nDo not charge until battery dies.", 5000);
         } else {
             menuHandler::menuQueue = menuHandler::battery_calibration_menu;
             screen->runNow();
