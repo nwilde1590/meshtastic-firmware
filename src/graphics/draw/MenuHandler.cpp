@@ -2367,8 +2367,7 @@ void menuHandler::batteryCalibrationConfirmMenu()
     bannerOptions.message = "Confirm Battery Calibration\n"
                             "1) Fully charge battery\n"
                             "2) Remove charger\n"
-                            "3) Wait 15 seconds\n"
-                            "4) Start calibration";
+                            "3) Start calibration";
     bannerOptions.optionsArrayPtr = optionsArray;
     bannerOptions.optionsCount = 2;
     bannerOptions.bannerCallback = [](int selected) -> void {
