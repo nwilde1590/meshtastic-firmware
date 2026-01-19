@@ -288,6 +288,9 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     char ocvStr[96] = {0};
     if (power) {
         const uint16_t *ocvValues = power->getOcvArray();
+        if (calibrationActive && calibrationOcvValid) {
+            ocvValues = calibrationOcv;
+        }
         int offset = snprintf(ocvStr, sizeof(ocvStr), "OCV:");
         for (size_t i = 0; i < NUM_OCV_POINTS && offset > 0 && static_cast<size_t>(offset) < sizeof(ocvStr); ++i) {
             const int written =

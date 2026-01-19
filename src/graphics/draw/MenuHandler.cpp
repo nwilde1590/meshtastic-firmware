@@ -2334,17 +2334,24 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Begin Calibration", "Reset OCV Array" };
-    
+    static const char *optionsArrayIdle[] = { "Back", "Begin Calibration", "Reset OCV Array" };
+    static const char *optionsArrayActive[] = { "Back", "Stop Calibration", "Reset OCV Array" };
+
     enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
-    bannerOptions.optionsArrayPtr = optionsArray;
+    const bool calibrationActive = batteryCalibrationModule && batteryCalibrationModule->isCalibrationActive();
+    bannerOptions.optionsArrayPtr = calibrationActive ? optionsArrayActive : optionsArrayIdle;
     bannerOptions.optionsCount = 3;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
-            menuHandler::menuQueue = menuHandler::battery_calibration_confirm_menu;
-            screen->runNow();
+            if (batteryCalibrationModule && batteryCalibrationModule->isCalibrationActive()) {
+                batteryCalibrationModule->stopCalibration();
+                IF_SCREEN(screen->showSimpleBanner("Calibration stopped.", 2000));
+            } else {
+                menuHandler::menuQueue = menuHandler::battery_calibration_confirm_menu;
+                screen->runNow();
+            }
         } else if (selected == Reset) {
             if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
@@ -2356,7 +2363,7 @@ void menuHandler::batteryCalibrationMenu()
             if (nodeDB) {
                 nodeDB->saveToDisk(SEGMENT_CONFIG);
             }
-            screen->showSimpleBanner("OCV array reset.\nUsing defaults.", 2000);
+            IF_SCREEN(screen->showSimpleBanner("OCV array reset.\nUsing defaults.", 2000));
             screen->runNow();
         } 
     };
@@ -2380,7 +2387,7 @@ void menuHandler::batteryCalibrationConfirmMenu()
         if (selected == Start) {
             if (batteryCalibrationModule) {
                 batteryCalibrationModule->startCalibration();
-                screen->showSimpleBanner("Calibration started.\nUse device as normal.\nDo not charge until battery dies.", 5000);
+                IF_SCREEN(screen->showSimpleBanner("Calibration started.\nUse device as normal.\nDo not charge until battery dies.", 5000));
             } else if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
             }
