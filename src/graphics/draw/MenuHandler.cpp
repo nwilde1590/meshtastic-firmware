@@ -2343,9 +2343,7 @@ void menuHandler::batteryCalibrationMenu()
     bannerOptions.optionsCount = 4;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
-            if (batteryCalibrationSampler) {
-                batteryCalibrationSampler->resetSamples();
-            }
+            menuHandler::menuQueue = menuHandler::battery_calibration_confirm_menu;
             screen->runNow();
         } else if (selected == Reset) {
             if (batteryCalibrationSampler) {
@@ -2359,6 +2357,34 @@ void menuHandler::batteryCalibrationMenu()
     screen->showOverlayBanner(bannerOptions);
     
 }
+
+void menuHandler::batteryCalibrationConfirmMenu()
+{
+    static const char *optionsArray[] = { "Back", "Start Calibration" };
+    enum optionsNumbers { Back = 0, Start = 1 };
+
+    BannerOverlayOptions bannerOptions;
+    bannerOptions.message = "Confirm Battery Calibration\n"
+                            "1) Fully charge battery\n"
+                            "2) Remove charger\n"
+                            "3) Wait 15 seconds\n"
+                            "4) Start calibration";
+    bannerOptions.optionsArrayPtr = optionsArray;
+    bannerOptions.optionsCount = 2;
+    bannerOptions.bannerCallback = [](int selected) -> void {
+        if (selected == Start) {
+            if (batteryCalibrationSampler) {
+                batteryCalibrationSampler->resetSamples();
+            }
+            screen->showSimpleBanner("Calibration starting\n(placeholder)", 3000);
+        } else {
+            menuHandler::menuQueue = menuHandler::battery_calibration_menu;
+            screen->runNow();
+        }
+    };
+    screen->showOverlayBanner(bannerOptions);
+}
+
 
 void menuHandler::keyVerificationInitMenu()
 {
@@ -2689,9 +2715,9 @@ void menuHandler::handleMenuSwitch(OLEDDisplay *display)
     case battery_calibration_menu:
         batteryCalibrationMenu();
         break;
-    // case battery_calibration_display_scale_menu:
-    //     batteryCalibrationDisplayScaleMenu();
-    //     break;
+    case battery_calibration_confirm_menu:
+        batteryCalibrationConfirmMenu();
+        break;
     case FrameToggles:
         FrameToggles_menu();
         break;
