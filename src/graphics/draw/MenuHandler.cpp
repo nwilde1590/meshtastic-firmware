@@ -2334,15 +2334,15 @@ void menuHandler::powerMenu()
 void menuHandler::batteryCalibrationMenu()
 {
 
-    static const char *optionsArray[] = { "Back", "Fully Charged", "Reset", "Apply Calibration" };
+    static const char *optionsArray[] = { "Back", "Begin Calibration", "Reset", "Apply Calibration" };
     
-    enum optionsNumbers { Back = 0, Full = 1, Reset = 2, Apply = 3 };
+    enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     bannerOptions.optionsArrayPtr = optionsArray;
     bannerOptions.optionsCount = 4;
     bannerOptions.bannerCallback = [](int selected) -> void {
-        if (selected == Full) {
+        if (selected == Start) {
             if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
             }
