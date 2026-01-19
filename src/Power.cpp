@@ -171,6 +171,25 @@ Power *power;
 
 using namespace meshtastic;
 
+namespace
+{
+bool copyOcvFromConfig(uint16_t *dest, size_t len)
+{
+    if (config.power.ocv_count == 0) {
+        return false;
+    }
+    if (config.power.ocv_count != len) {
+        LOG_WARN("Power config OCV array has %u entries, expected %u; using defaults", config.power.ocv_count,
+                 static_cast<unsigned>(len));
+        return false;
+    }
+    for (size_t i = 0; i < len; ++i) {
+        dest[i] = static_cast<uint16_t>(config.power.ocv[i]);
+    }
+    return true;
+}
+} // namespace
+
 #ifndef AREF_VOLTAGE
 #if defined(ARCH_NRF52)
 /*
@@ -238,6 +257,18 @@ static void battery_adcDisable()
 class AnalogBatteryLevel : public HasBatteryLevel
 {
   public:
+    void applyOcvConfig()
+    {
+        if (!copyOcvFromConfig(ocv, NUM_OCV_POINTS)) {
+            return;
+        }
+        chargingVolt = (ocv[0] + 10) * NUM_CELLS;
+        noBatVolt = (ocv[NUM_OCV_POINTS - 1] - 500) * NUM_CELLS;
+        if (!initial_read_done) {
+            last_read_value = (ocv[NUM_OCV_POINTS - 1] * NUM_CELLS);
+        }
+    }
+
     /**
      * Battery state of charge, from 0 to 100 or -1 for unknown
      */
@@ -268,13 +299,13 @@ class AnalogBatteryLevel : public HasBatteryLevel
         float battery_SOC = 0.0;
         uint16_t voltage = v / NUM_CELLS; // single cell voltage (average)
         for (int i = 0; i < NUM_OCV_POINTS; i++) {
-            if (OCV[i] <= voltage) {
+            if (ocv[i] <= voltage) {
                 if (i == 0) {
                     battery_SOC = 100.0; // 100% full
                 } else {
-                    // interpolate between OCV[i] and OCV[i-1]
+                    // interpolate between ocv[i] and ocv[i-1]
                     battery_SOC = (float)100.0 / (NUM_OCV_POINTS - 1.0) *
-                                  (NUM_OCV_POINTS - 1.0 - i + ((float)voltage - OCV[i]) / (OCV[i - 1] - OCV[i]));
+                                  (NUM_OCV_POINTS - 1.0 - i + ((float)voltage - ocv[i]) / (ocv[i - 1] - ocv[i]));
                 }
                 break;
             }
@@ -507,14 +538,14 @@ class AnalogBatteryLevel : public HasBatteryLevel
 
     /// For heltecs with no battery connected, the measured voltage is 2204, so
     // need to be higher than that, in this case is 2500mV (3000-500)
-    const uint16_t OCV[NUM_OCV_POINTS] = {OCV_ARRAY};
-    const float chargingVolt = (OCV[0] + 10) * NUM_CELLS;
-    const float noBatVolt = (OCV[NUM_OCV_POINTS - 1] - 500) * NUM_CELLS;
+    uint16_t ocv[NUM_OCV_POINTS] = {OCV_ARRAY};
+    float chargingVolt = (ocv[0] + 10) * NUM_CELLS;
+    float noBatVolt = (ocv[NUM_OCV_POINTS - 1] - 500) * NUM_CELLS;
     // Start value from minimum voltage for the filter to not start from 0
     // that could trigger some events.
     // This value is over-written by the first ADC reading, it the voltage seems reasonable.
     bool initial_read_done = false;
-    float last_read_value = (OCV[NUM_OCV_POINTS - 1] * NUM_CELLS);
+    float last_read_value = (ocv[NUM_OCV_POINTS - 1] * NUM_CELLS);
     uint32_t last_read_time_ms = 0;
 
 #if HAS_TELEMETRY && !MESHTASTIC_EXCLUDE_ENVIRONMENTAL_SENSOR && defined(HAS_RAKPROT)
@@ -602,6 +633,11 @@ Power::Power() : OSThread("Power")
 #endif
 }
 
+void Power::loadOcvFromConfig()
+{
+    copyOcvFromConfig(ocv, NUM_OCV_POINTS);
+}
+
 bool Power::analogInit()
 {
 #ifdef EXT_PWR_DETECT
@@ -674,6 +710,7 @@ bool Power::analogInit()
     analogReadResolution(BATTERY_SENSE_RESOLUTION_BITS);
 #endif
 
+    analogLevel.applyOcvConfig();
     batteryLevel = &analogLevel;
     return true;
 #else
@@ -689,6 +726,7 @@ bool Power::analogInit()
 bool Power::setup()
 {
     bool found = false;
+    loadOcvFromConfig();
     if (axpChipInit()) {
         found = true;
     } else if (lipoInit()) {
@@ -834,10 +872,10 @@ void Power::readPowerStatus()
                 batteryChargePercent = batteryLevel->getBatteryPercent();
             } else {
                 // If the AXP192 returns a percentage less than 0, the feature is either not supported or there is an error
-                // In that case, we compute an estimate of the charge percent based on open circuit voltage table defined
-                // in power.h
-                batteryChargePercent = clamp((int)(((batteryVoltageMv - (OCV[NUM_OCV_POINTS - 1] * NUM_CELLS)) * 1e2) /
-                                                   ((OCV[0] * NUM_CELLS) - (OCV[NUM_OCV_POINTS - 1] * NUM_CELLS))),
+                // In that case, we compute an estimate of the charge percent based on the configured
+                // open circuit voltage table.
+                batteryChargePercent = clamp((int)(((batteryVoltageMv - (ocv[NUM_OCV_POINTS - 1] * NUM_CELLS)) * 1e2) /
+                                                   ((ocv[0] * NUM_CELLS) - (ocv[NUM_OCV_POINTS - 1] * NUM_CELLS))),
                                              0, 100);
             }
         }
@@ -927,7 +965,7 @@ void Power::readPowerStatus()
     //
 
     if (batteryLevel && powerStatus2.getHasBattery() && !powerStatus2.getHasUSB()) {
-        if (batteryLevel->getBattVoltage() < OCV[NUM_OCV_POINTS - 1]) {
+        if (batteryLevel->getBattVoltage() < ocv[NUM_OCV_POINTS - 1]) {
             low_voltage_counter++;
             LOG_DEBUG("Low voltage counter: %d/10", low_voltage_counter);
             if (low_voltage_counter > 10) {
