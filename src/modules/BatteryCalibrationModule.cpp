@@ -156,26 +156,13 @@ void BatteryCalibrationModule::computeGraphBounds(OLEDDisplay *display, int16_t 
 
 void BatteryCalibrationModule::drawBatteryGraph(OLEDDisplay *display, int16_t graphX, int16_t graphY, int16_t graphW, int16_t graphH,
                                                 const BatteryCalibrationSampler::BatterySample *samples, uint16_t sampleCount,
-                                                uint16_t sampleStart)
-{
-    if (!samples || sampleCount < 2 || graphW <= 1 || graphH <= 1) {
+                                                uint16_t sampleStart, uint32_t minMv, uint32_t maxMv)
+                                                {
+    if (!samples || sampleCount < 2 || graphW <= 1 || graphH <= 1 || maxMv <= minMv) {
         return;
     }
 
-    uint16_t minMv = samples[sampleStart].voltageMv;
-    uint16_t maxMv = samples[sampleStart].voltageMv;
-    for (uint16_t i = 1; i < sampleCount; ++i) {
-        const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % BatteryCalibrationSampler::kMaxSamples);
-        const uint16_t voltageMv = samples[sampleIndex].voltageMv;
-        if (voltageMv < minMv) {
-            minMv = voltageMv;
-        }
-        if (voltageMv > maxMv) {
-            maxMv = voltageMv;
-        }
-    }
-
-    const uint16_t rangeMv = static_cast<uint16_t>(maxMv - minMv);
+    const uint32_t rangeMv = maxMv - minMv;
     const int32_t xSpan = graphW - 1;
     const int32_t ySpan = graphH - 1;
     const uint16_t maxIndex = static_cast<uint16_t>(sampleCount - 1);
@@ -192,8 +179,8 @@ void BatteryCalibrationModule::drawBatteryGraph(OLEDDisplay *display, int16_t gr
     };
 
     auto voltageToY = [&](uint16_t voltageMv) -> int16_t {
-        const uint16_t denom = (rangeMv == 0) ? 1 : rangeMv;
-        const int32_t scaled = static_cast<int32_t>(voltageMv - minMv) * ySpan / denom;
+        const uint32_t denom = (rangeMv == 0) ? 1 : rangeMv;
+        const int32_t scaled = static_cast<int32_t>(static_cast<int32_t>(voltageMv) - static_cast<int32_t>(minMv)) * ySpan / denom;
         const int16_t yValue = static_cast<int16_t>(graphY + ySpan - scaled);
         return clampY(yValue);
     };
@@ -322,6 +309,30 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
         return;
     }
 
-    drawBatteryGraph(display, graphX, graphY, graphW, graphH, samples, sampleCount, sampleStart);
+    uint32_t minMv = 0;
+    uint32_t maxMv = 0;
+    const uint16_t *ocvValues = power ? power->getOcvArray() : nullptr;
+    if (ocvValues) {
+        minMv = ocvValues[0];
+        maxMv = ocvValues[0];
+        for (size_t i = 1; i < NUM_OCV_POINTS; ++i) {
+            minMv = std::min<uint32_t>(minMv, ocvValues[i]);
+            maxMv = std::max<uint32_t>(maxMv, ocvValues[i]);
+        }
+        constexpr uint32_t marginMv = 200;
+        minMv = (minMv > marginMv) ? (minMv - marginMv) : 0;
+        maxMv += marginMv;
+    } else {
+        minMv = samples[sampleStart].voltageMv;
+        maxMv = samples[sampleStart].voltageMv;
+        for (uint16_t i = 1; i < sampleCount; ++i) {
+            const uint16_t sampleIndex = static_cast<uint16_t>((sampleStart + i) % BatteryCalibrationSampler::kMaxSamples);
+            const uint16_t voltageMv = samples[sampleIndex].voltageMv;
+            minMv = std::min<uint32_t>(minMv, voltageMv);
+            maxMv = std::max<uint32_t>(maxMv, voltageMv);
+        }
+    }
+
+    drawBatteryGraph(display, graphX, graphY, graphW, graphH, samples, sampleCount, sampleStart, minMv, maxMv);
 }
 #endif
