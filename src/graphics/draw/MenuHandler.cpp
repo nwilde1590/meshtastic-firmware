@@ -2349,6 +2349,14 @@ void menuHandler::batteryCalibrationMenu()
             if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
             }
+            config.power.ocv_count = 0;
+            for (size_t i = 0; i < NUM_OCV_POINTS; ++i) {
+                config.power.ocv[i] = 0;
+            }
+            if (nodeDB) {
+                nodeDB->saveToDisk(SEGMENT_CONFIG);
+            }
+            screen->showSimpleBanner("OCV array reset.\nUsing defaults.", 2000);
             screen->runNow();
         } 
     };
@@ -2372,10 +2380,10 @@ void menuHandler::batteryCalibrationConfirmMenu()
         if (selected == Start) {
             if (batteryCalibrationModule) {
                 batteryCalibrationModule->startCalibration();
+                screen->showSimpleBanner("Calibration started.\nUse device as normal.\nDo not charge until battery dies.", 5000);
             } else if (batteryCalibrationSampler) {
                 batteryCalibrationSampler->resetSamples();
             }
-            screen->showSimpleBanner("Calibration started.\nUse device as normal.\nDo not charge until battery dies.", 5000);
         } else {
             menuHandler::menuQueue = menuHandler::battery_calibration_menu;
             screen->runNow();

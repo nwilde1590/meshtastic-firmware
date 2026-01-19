@@ -262,7 +262,7 @@ void BatteryCalibrationModule::drawFrame(OLEDDisplay *display, OLEDDisplayUiStat
     }
     const uint32_t hourMs = 60 * 60 * 1000U;
  if (calibrating) {
-        snprintf(durationStr, sizeof(durationStr), "Calibration in progress");
+        snprintf(durationStr, sizeof(durationStr), "Calibrating...");
     } else if (displayWindowMs >= hourMs && displayWindowMs % hourMs == 0) {
         snprintf(durationStr, sizeof(durationStr), "%luh", static_cast<unsigned long>(displayWindowMs / hourMs));
     } else {
