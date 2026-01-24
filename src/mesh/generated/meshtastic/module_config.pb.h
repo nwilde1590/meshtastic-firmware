@@ -412,7 +412,7 @@ typedef struct _meshtastic_ModuleConfig_AmbientLightingConfig {
 /* StatusMessage config - Allows setting a status message for a node to periodically rebroadcast */
 typedef struct _meshtastic_ModuleConfig_StatusMessageConfig {
     /* The actual status string */
-    pb_callback_t node_status;
+    char node_status[80];
 } meshtastic_ModuleConfig_StatusMessageConfig;
 
 /* A GPIO pin definition for remote hardware module */
@@ -543,7 +543,7 @@ extern "C" {
 #define meshtastic_ModuleConfig_TelemetryConfig_init_default {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_CannedMessageConfig_init_default {0, 0, 0, 0, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, 0, 0, "", 0}
 #define meshtastic_ModuleConfig_AmbientLightingConfig_init_default {0, 0, 0, 0, 0}
-#define meshtastic_ModuleConfig_StatusMessageConfig_init_default {{{NULL}, NULL}}
+#define meshtastic_ModuleConfig_StatusMessageConfig_init_default {""}
 #define meshtastic_RemoteHardwarePin_init_default {0, "", _meshtastic_RemoteHardwarePinType_MIN}
 #define meshtastic_ModuleConfig_init_zero        {0, {meshtastic_ModuleConfig_MQTTConfig_init_zero}}
 #define meshtastic_ModuleConfig_MQTTConfig_init_zero {0, "", "", "", 0, 0, 0, "", 0, 0, false, meshtastic_ModuleConfig_MapReportSettings_init_zero}
@@ -560,7 +560,7 @@ extern "C" {
 #define meshtastic_ModuleConfig_TelemetryConfig_init_zero {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_CannedMessageConfig_init_zero {0, 0, 0, 0, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, 0, 0, "", 0}
 #define meshtastic_ModuleConfig_AmbientLightingConfig_init_zero {0, 0, 0, 0, 0}
-#define meshtastic_ModuleConfig_StatusMessageConfig_init_zero {{{NULL}, NULL}}
+#define meshtastic_ModuleConfig_StatusMessageConfig_init_zero {""}
 #define meshtastic_RemoteHardwarePin_init_zero   {0, "", _meshtastic_RemoteHardwarePinType_MIN}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -881,8 +881,8 @@ X(a, STATIC,   SINGULAR, UINT32,   blue,              5)
 #define meshtastic_ModuleConfig_AmbientLightingConfig_DEFAULT NULL
 
 #define meshtastic_ModuleConfig_StatusMessageConfig_FIELDLIST(X, a) \
-X(a, CALLBACK, SINGULAR, STRING,   node_status,       1)
-#define meshtastic_ModuleConfig_StatusMessageConfig_CALLBACK pb_default_field_callback
+X(a, STATIC,   SINGULAR, STRING,   node_status,       1)
+#define meshtastic_ModuleConfig_StatusMessageConfig_CALLBACK NULL
 #define meshtastic_ModuleConfig_StatusMessageConfig_DEFAULT NULL
 
 #define meshtastic_RemoteHardwarePin_FIELDLIST(X, a) \
@@ -945,6 +945,7 @@ extern const pb_msgdesc_t meshtastic_RemoteHardwarePin_msg;
 #define meshtastic_ModuleConfig_RangeTestConfig_size 12
 #define meshtastic_ModuleConfig_RemoteHardwareConfig_size 96
 #define meshtastic_ModuleConfig_SerialConfig_size 28
+#define meshtastic_ModuleConfig_StatusMessageConfig_size 81
 #define meshtastic_ModuleConfig_StoreForwardConfig_size 24
 #define meshtastic_ModuleConfig_TelemetryConfig_size 50
 #define meshtastic_RemoteHardwarePin_size        21
