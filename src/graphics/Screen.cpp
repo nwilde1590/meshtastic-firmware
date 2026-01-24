@@ -156,6 +156,7 @@ void Screen::showOverlayBanner(BannerOverlayOptions banner_overlay_options)
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+    NotificationRenderer::bannerGeneration++;
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, banner_overlay_options.message, 255);
     NotificationRenderer::alertBannerMessage[255] = '\0'; // Ensure null termination
@@ -167,7 +168,8 @@ void Screen::showOverlayBanner(BannerOverlayOptions banner_overlay_options)
     NotificationRenderer::alertBannerCallback = banner_overlay_options.bannerCallback;
     NotificationRenderer::curSelected = banner_overlay_options.InitialSelected;
     NotificationRenderer::pauseBanner = false;
-    NotificationRenderer::current_notification_type = notificationTypeEnum::selection_picker;
+    NotificationRenderer::current_notification_type = banner_overlay_options.notificationType;
+    NotificationRenderer::inEvent.inputEvent = INPUT_BROKER_NONE;
     static OverlayCallback overlays[] = {graphics::UIRenderer::drawNavigationBar, NotificationRenderer::drawBannercallback};
     ui->setOverlays(overlays, sizeof(overlays) / sizeof(overlays[0]));
     ui->setTargetFPS(60);
@@ -180,6 +182,7 @@ void Screen::showNodePicker(const char *message, uint32_t durationMs, std::funct
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+    NotificationRenderer::bannerGeneration++;
     nodeDB->pause_sort(true);
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, message, 255);
@@ -203,6 +206,7 @@ void Screen::showNumberPicker(const char *message, uint32_t durationMs, uint8_t 
 #ifdef USE_EINK
     EINK_ADD_FRAMEFLAG(dispdev, DEMAND_FAST); // Skip full refresh for all overlay menus
 #endif
+    NotificationRenderer::bannerGeneration++;
     // Store the message and set the expiration timestamp
     strncpy(NotificationRenderer::alertBannerMessage, message, 255);
     NotificationRenderer::alertBannerMessage[255] = '\0'; // Ensure null termination
@@ -223,7 +227,7 @@ void Screen::showNumberPicker(const char *message, uint32_t durationMs, uint8_t 
 void Screen::showTextInput(const char *header, const char *initialText, uint32_t durationMs,
                            std::function<void(const std::string &)> textCallback)
 {
-    LOG_INFO("showTextInput called with header='%s', durationMs=%d", header ? header : "NULL", durationMs);
+    NotificationRenderer::bannerGeneration++;
 
     // Start OnScreenKeyboardModule session (non-touch variant)
     OnScreenKeyboardModule::instance().start(header, initialText, durationMs, textCallback);
