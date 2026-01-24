@@ -2335,14 +2335,14 @@ void menuHandler::batteryCalibrationMenu()
 {
 
     static const char *optionsArrayIdle[] = { "Back", "Begin Calibration", "Reset OCV Array" };
-    static const char *optionsArrayActive[] = { "Back", "Stop Calibration", "Reset OCV Array" };
+    static const char *optionsArrayActive[] = { "Back", "Stop Calibration", "Reset OCV Array", "Save OCV & End" };
 
     enum optionsNumbers { Back = 0, Start = 1, Reset = 2, Apply = 3 };
     BannerOverlayOptions bannerOptions;
     bannerOptions.message = "Battery Calibration Action";
     const bool calibrationActive = batteryCalibrationModule && batteryCalibrationModule->isCalibrationActive();
     bannerOptions.optionsArrayPtr = calibrationActive ? optionsArrayActive : optionsArrayIdle;
-    bannerOptions.optionsCount = 3;
+    bannerOptions.optionsCount = calibrationActive ? 4 : 3;
     bannerOptions.bannerCallback = [](int selected) -> void {
         if (selected == Start) {
             if (batteryCalibrationModule && batteryCalibrationModule->isCalibrationActive()) {
@@ -2363,9 +2363,25 @@ void menuHandler::batteryCalibrationMenu()
             if (nodeDB) {
                 nodeDB->saveToDisk(SEGMENT_CONFIG);
             }
-            IF_SCREEN(screen->showSimpleBanner("OCV array reset.\nUsing defaults.", 2000));
+            IF_SCREEN(screen->showSimpleBanner("OCV array reset.\nRebooting...", 2000));
+            rebootAtMsec = (millis() + DEFAULT_REBOOT_SECONDS * 1000);
             screen->runNow();
-        } 
+        } else if (selected == Apply) {
+            if (batteryCalibrationModule && batteryCalibrationModule->isCalibrationActive()) {
+                if (batteryCalibrationModule->persistCalibrationOcv()) {
+                    if (nodeDB) {
+                        nodeDB->saveToDisk(SEGMENT_CONFIG);
+                    } else {
+                    }
+                    batteryCalibrationModule->stopCalibration();
+                    IF_SCREEN(screen->showSimpleBanner("OCV saved.\nCalibration ended.", 2000));
+                } else {
+                    IF_SCREEN(screen->showSimpleBanner("OCV not ready yet.", 2000));
+                }
+            } else {
+            }
+            screen->runNow();
+        }
     };
     screen->showOverlayBanner(bannerOptions);
     

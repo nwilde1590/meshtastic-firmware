@@ -105,6 +105,7 @@ class Power : private concurrency::OSThread
     void readPowerStatus();
     virtual bool setup();
     virtual int32_t runOnce() override;
+    bool reloadOcvFromConfig();
     void setStatusHandler(meshtastic::PowerStatus *handler) { statusHandler = handler; }
     const uint16_t *getOcvArray() const { return ocv; }
     

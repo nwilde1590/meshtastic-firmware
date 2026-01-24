@@ -21,6 +21,10 @@
 #include "meshUtils.h"
 #include "sleep.h"
 
+#if HAS_SCREEN && !MESHTASTIC_EXCLUDE_BATTERY_CALIBRATION
+#include "modules/BatteryCalibrationModule.h"
+#endif
+
 #if defined(ARCH_PORTDUINO)
 #include "api/WiFiServerAPI.h"
 #include "input/LinuxInputImpl.h"
@@ -257,14 +261,17 @@ static void battery_adcDisable()
 class AnalogBatteryLevel : public HasBatteryLevel
 {
   public:
-    void applyOcvConfig()
+    void applyOcvConfig(bool reset_read_value = false)
     {
-        if (!copyOcvFromConfig(ocv, NUM_OCV_POINTS)) {
+        bool ocv_loaded = copyOcvFromConfig(ocv, NUM_OCV_POINTS);
+        LOG_INFO("OCV load from config: %s (first: %u, last: %u)", ocv_loaded ? "true" : "false", ocv[0],
+                 ocv[NUM_OCV_POINTS - 1]);
+        if (!ocv_loaded) {
             return;
         }
         chargingVolt = (ocv[0] + 10) * NUM_CELLS;
         noBatVolt = (ocv[NUM_OCV_POINTS - 1] - 500) * NUM_CELLS;
-        if (!initial_read_done) {
+        if (reset_read_value || !initial_read_done) {
             last_read_value = (ocv[NUM_OCV_POINTS - 1] * NUM_CELLS);
         }
     }
@@ -637,7 +644,13 @@ void Power::loadOcvFromConfig()
 {
     copyOcvFromConfig(ocv, NUM_OCV_POINTS);
 }
-
+bool Power::reloadOcvFromConfig()
+{
+    bool loaded = copyOcvFromConfig(ocv, NUM_OCV_POINTS);
+    analogLevel.applyOcvConfig(true);
+    LOG_INFO("Power OCV reload %s (first=%u last=%u)", loaded ? "ok" : "failed", ocv[0], ocv[NUM_OCV_POINTS - 1]);
+    return loaded;
+}
 bool Power::analogInit()
 {
 #ifdef EXT_PWR_DETECT
