@@ -930,7 +930,9 @@ extern const pb_msgdesc_t meshtastic_RemoteHardwarePin_msg;
 #define meshtastic_RemoteHardwarePin_fields &meshtastic_RemoteHardwarePin_msg
 
 /* Maximum encoded size of messages (where known) */
-#define MESHTASTIC_MESHTASTIC_MODULE_CONFIG_PB_H_MAX_SIZE meshtastic_ModuleConfig_size
+/* meshtastic_ModuleConfig_size depends on runtime parameters */
+/* meshtastic_ModuleConfig_StatusMessageConfig_size depends on runtime parameters */
+#define MESHTASTIC_MESHTASTIC_MODULE_CONFIG_PB_H_MAX_SIZE meshtastic_ModuleConfig_MQTTConfig_size
 #define meshtastic_ModuleConfig_AmbientLightingConfig_size 14
 #define meshtastic_ModuleConfig_AudioConfig_size 19
 #define meshtastic_ModuleConfig_CannedMessageConfig_size 49
@@ -946,7 +948,6 @@ extern const pb_msgdesc_t meshtastic_RemoteHardwarePin_msg;
 #define meshtastic_ModuleConfig_StatusMessageConfig_size 81
 #define meshtastic_ModuleConfig_StoreForwardConfig_size 24
 #define meshtastic_ModuleConfig_TelemetryConfig_size 50
-#define meshtastic_ModuleConfig_size             227
 #define meshtastic_RemoteHardwarePin_size        21
 
 #ifdef __cplusplus
