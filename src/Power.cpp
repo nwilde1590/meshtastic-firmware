@@ -183,16 +183,16 @@ namespace
 {
 bool copyOcvFromConfig(uint16_t *dest, size_t len)
 {
-    if (config.power.ocv_count == 0) {
+    if (config.power.OCV_count == 0) {
         return false;
     }
-    if (config.power.ocv_count != len) {
-        LOG_WARN("Power config OCV array has %u entries, expected %u; using defaults", config.power.ocv_count,
+    if (config.power.OCV_count != len) {
+        LOG_WARN("Power config OCV array has %u entries, expected %u; using defaults", config.power.OCV_count,
                  static_cast<unsigned>(len));
         return false;
     }
     for (size_t i = 0; i < len; ++i) {
-        dest[i] = static_cast<uint16_t>(config.power.ocv[i]);
+        dest[i] = static_cast<uint16_t>(config.power.OCV[i]);
     }
     return true;
 }
